@@ -1,94 +1,49 @@
-<?php
+<?php //Create, Read, Update and Delete
 require_once("DAO.php");
 
 class CRUD extends DAO {
 	protected $table;
 	
-	public function __construct($table) {
-		//pickup connection parent::__construct();
-		$this->connection = $this->getConnection();
+	public function __construct($pdoConnection, $table) {
+		//Pickup connection - parent::__construct();
+		$this->pdoConnection = $pdoConnection;
 		
-		//set table
+		//Set $table
 		$this->table = $table;
 	}
 	
-	public function __destruct() {
-		if($this->connection != NULL) {
-			mysqli_close($this->connection);
-		}
-	}
+	//public function __destruct() {}
 	
-	public function create($campos=null) {
-		//INSERT INTO usuario (id, nome, email) VALUES (3,'Vezi','email@vd.net')
-		$sql = "INSERT INTO ".$this->table." (";
-		
-		for($i = 0; $i < count($campos); $i++) {
-			$sql .= key($campos);
-			
-			//Montando separação de variaveis
-			if($i < (count($campos) - 1)) {
-				$sql .= ", ";
-			}else {
-				$sql .= " ";
-			}
-			
-			//proxima chave(key) do array
-			next($campos);
+	public function create($fields_and_values = null) {
+		//Para cada informação do array
+		foreach ($fields_and_values as $key => $value) {
+			$fields[] = $key;
+			$values[] = $value;
 		}
 		
-		$sql .= ") VALUES (";
+		//Formata a string para o padrao SQL 
+		$fields = implode(", ", $fields);
+		$values = "'" . implode("', '", $values) . "'";
 		
-		reset($campos);
+		$sql = "INSERT INTO {$this->table} ({$fields}) VALUES ({$values})";
 		
-		for($i = 0; $i < count($campos); $i++) {
-			$sql .= is_numeric( $campos[key($campos)] ) ? $campos[key($campos)] : "'".$campos[key($campos)]."'";
-			
-			//Montando separação de variaveis
-			if($i < (count($campos) - 1)) {
-				$sql .= ", ";
-			}else {
-				$sql .= " ";
-			}
-			next($campos);
-		}
-		$sql .= ")";
-		echo $sql;
-		$query = mysqli_query($this->connection, $sql);
+		return $this->executeSQL($sql);
 	}
 	
 	public function select($where=null) {
 		$sql = "SELECT * FROM ".$this->table;
 		if ($where != null) {
-			$sql .= " ".$where;
+			$sql .= " WHERE ".$where;
 		}
-		echo $sql;
-		
-		//Executa o SQL
-		$query = mysqli_query($this->connection, $sql);
-		echo "<br>Linhas afetadas = ".mysqli_affected_rows($this->connection);
-		
-		//Retorna dados
-		//$data = mysqli_fetch_object($query);
-		
-		//mysqli_fetch_assoc
-		//mysqli_fetch_object
-		//mysqli_fetch_array
-		while ($row = mysqli_fetch_assoc($query)){
-			echo "<br>";
-			foreach($row as $element){
-				//echo " / ".$element;
-				//$data[] = $element;
-			}
-			$data[] = $row;
-		}
-		
-		
-		return $data;
+		//echo $sql;
+		return $this->executeSQL($sql);
 	}
 	
-	public function update($campos, $where) {
-		//UPDATE `usuario` SET `sobrenome` = 'Master' WHERE `usuario`.`id` = 21;
-		$sql = "UPDATE ".$this->table." SET ";
+	public function update($campos = NULL, $where = NULL) {
+		//Se faltar informaçoes PARE!
+		if($campos == NULL || $where == NULL) return false;
+		
+		$sql = "UPDATE {$this->table} SET ";
 		
 		for($i = 0; $i < count($campos); $i++) {
 			$sql .= key($campos)." = ";
@@ -97,22 +52,21 @@ class CRUD extends DAO {
 			if($i < count($campos) - 1) $sql .= ", ";
 			else $sql .= " ";
 			
+			//Va para o proximo campo do array
 			next($campos);
 		}
-		$sql .= $where;
+		$sql .= "WHERE ".$where;
 		
-		echo $sql;
-		$query = mysqli_query($this->connection, $sql);
-		echo "<br>Linhas afetadas = ".mysqli_affected_rows($this->connection);
+		//echo $sql;
+		return $this->executeSQL($sql);
 	}
 	
 	public function delete($where=null) {
-		//DELETE FROM `usuario` WHERE 1
-		$sql = "DELETE FROM ".$this->table." ".$where;
-		echo $sql;
+		if($where == NULL) return false;
 		
-		$query = mysqli_query($this->connection, $sql);
-		echo "<br>Linhas afetadas = ".mysqli_affected_rows($this->connection);
+		$sql = "DELETE FROM {$this->table} WHERE {$where}";
+		
+		//echo $sql;
+		return $this->executeSQL($sql);
 	}
 }
-?>

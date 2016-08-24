@@ -1,19 +1,37 @@
-<?php
+<?php //Data Access Object 
 abstract class DAO {
-	protected $server = "localhost";
-	protected $db = "estoque";
-	protected $user = "root";
-	protected $password = "";
-	protected $connection;
+	protected $pdoConnection;
+	protected $data;
+	protected $affectedRows;
 	
-	public function getConnection() {
-		//Connect to the MySQL server
-		$this->connection = mysqli_connect($this->server, $this->user, $this->password) or mysqli_connect_error(); 
+	public function executeSQL($sql) {
+		//A query é um object(PDOStatement)
+		$query = $this->pdoConnection->prepare($sql);
+		$query->execute() or die(print_r($query->errorInfo(), true));
 		
-		//select database
-		mysqli_select_db($this->connection, $this->db) or mysqli_connect_error();
+		//Set linhas afetadas
+		//$this->affectedRows = $query->rowCount();
 		
-		return $this->connection;
+		//
+		if($query->rowCount() > 0) {
+			//Caso tenha sido o SELECT o comando, pegue o resultado
+			if(substr(trim(strtolower($sql)), 0, 6) == "select") $this->data = $query;
+			
+			return 1;
+		}
+		else return 0;
+	}
+	
+	public function getData($fetchOption = NULL) {
+		switch ($fetchOption) {
+			case "array":
+				return $this->data->fetchAll(PDO::FETCH_NUM);
+				break;
+			case "assoc":
+				return $this->data->fetchAll(PDO::FETCH_ASSOC);
+				break;
+			default:
+				return $this->data->fetchAll(PDO::FETCH_OBJ);
+		}
 	}
 }
-?>

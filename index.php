@@ -1,20 +1,45 @@
 <?php
-require_once("CRUD.php");
+require_once("config.php");
 
-function vd($var) { //Alternativa para o var_dump
-	echo '<hr><pre>';
-	print_r($var);
-	echo '</pre><hr>';
+try { //Declarando dependencia
+	$pdo = new PDO("mysql:host=localhost;dbname=learning", "root", "");
+}
+catch(PDOException $e) {
+	echo $e->getMessage();
 }
 
+//Injetando a dependencia
+$obj = new CRUD($pdo, "crud");
 
-$obj = new CRUD("usuario");
-//vd($obj);
+$campos = array(
+            'name' => 'Vezi0',
+            'tel' => '981334279',
+            'date' => '2016-08-23',
+        );
+//vd($campos);
+
+//Create
+//$obj->create($campos);
+
+//Read"id != 1"
+$obj->select();
+	vd( $obj->getData("assoc") );
+
+
+//Update
+//$obj->update($campos, "id = 1");/**/
+
+
+//Delete
+//$obj->delete("id = 1");
+
+
 
 /**/
 //$result = $obj->select("where nome='Rivqah'");
-$result = $obj->select();
+//$result = $obj->select();
 //vd($result);
+/*/
 foreach($result as $row) {
 	for($i = 0; $i < count($row); $i++) {
 		echo "[".key($row)."] => ".$row[key($row)].'<br>';
@@ -22,18 +47,3 @@ foreach($result as $row) {
 	}
 	echo '<br>';
 }/**/
-$campos = array(
-            'id' => 10,
-            'nome' => 'Rivqah',
-            'sobrenome' => 'Precious',
-            'senha' => md5('leitora'),
-            'email' => 'rivqah@precious.net'
-        );
-//vd($campos);
-
-//$obj->create($campos); //Create
-//$obj->select(); //Read
-//$obj->update($campos, "WHERE id = 10"); //Update
-//$obj->delete("WHERE id = 10"); //Delete
-
-?>
